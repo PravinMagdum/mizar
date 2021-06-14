@@ -24,6 +24,29 @@
 
 cp -rf /var/mizar /home/
 mkdir -p /etc/cni/net.d
+# check if python is installed ,if yes and check version and install dev pkgs accordingly
+pyversion="3.7"
+
+version=$(nsenter -t 1 -m -u -n -i python3 -V 2>&1 | grep -Po '(?<=Python )(.+)')
+if [[ -z "$version" ]]
+then
+    echo "No Python!"
+    # continue with 3.7
+else
+    parsedVersion=$(echo "${version//./}")
+    if [[ "$parsedVersion" -gt "380" && "$parsedVersion" -lt "390" ]]
+    then
+       echo "Valid version 380"
+       pyversion="3.8"
+    elif [[ "$parsedVersion" -gt "370" && "$parsedVersion" -lt "380" ]]
+    then
+        echo "valid version 370"
+        #test purpose ,we can remove this elif block
+    fi
+fi
+
+echo "python"$pyversion
+
 nsenter -t 1 -m -u -n -i apt-get update -y && nsenter -t 1 -m -u -n -i apt-get install -y \
     sudo \
     rpcbind \
@@ -35,15 +58,15 @@ nsenter -t 1 -m -u -n -i apt-get update -y && nsenter -t 1 -m -u -n -i apt-get i
     bridge-utils \
     ethtool \
     curl \
-    python3.7 \
+    python$pyversion \
     lcov \
-    python3.7-dev \
+    python$pyversion-dev \
     python3-apt \
     libcmocka-dev \
     python3-pip && \
 nsenter -t 1 -m -u -n -i  update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 && \
-nsenter -t 1 -m -u -n -i  update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 2 && \
-nsenter -t 1 -m -u -n -i  update-alternatives --set python3 /usr/bin/python3.7 && \
+nsenter -t 1 -m -u -n -i  update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$pyversion 2 && \
+nsenter -t 1 -m -u -n -i  update-alternatives --set python3 /usr/bin/python$pyversion && \
 nsenter -t 1 -m -u -n -i  ln -snf /usr/lib/python3/dist-packages/apt_pkg.cpython-36m-x86_64-linux-gnu.so /usr/lib/python3/dist-packages/apt_pkg.so && \
 nsenter -t 1 -m -u -n -i mkdir -p /opt/cni/bin && \
 nsenter -t 1 -m -u -n -i mkdir -p /etc/cni/net.d && \
