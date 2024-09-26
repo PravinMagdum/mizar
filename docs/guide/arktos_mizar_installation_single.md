@@ -70,6 +70,7 @@ Also, please ensure the hostname and its ip address in /etc/hosts. For instance,
 
 ```bash
 cd $HOME/mizar
+chmod 755 replace-containerd.sh
 ./replace-containerd.sh
 ```
 
